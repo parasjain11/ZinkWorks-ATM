@@ -14,8 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import com.example.ZinkWorksATM.Exception.InsufficientBalanceException;
+import com.example.ZinkWorksATM.Exception.InsufficientNoteException;
+import com.example.ZinkWorksATM.Exception.InvalidAmountException;
 import com.example.ZinkWorksATM.Exception.InvalidUserAccountException;
 import com.example.ZinkWorksATM.Exception.UnAuthorizedUserException;
+import com.example.ZinkWorksATM.Model.ATMWithdrawalDisplay;
 import com.example.ZinkWorksATM.Model.Bank;
 import com.example.ZinkWorksATM.Model.UserAccount;
 import com.example.ZinkWorksATM.Service.ATMMachineService;
@@ -63,12 +68,41 @@ public class ATMMachineControllerTest {
 		assertEquals(account.getOpeningBalance(), 800);
 		assertEquals(account.getOverDraft(), 200);
 	}
+	
 	@Test
 	public void TestCheckBalanceException() throws InvalidUserAccountException, UnAuthorizedUserException{
-		UserAccount account =  new UserAccount(null, null, null, null, null);
+		UserAccount account =  new UserAccount((long)12345, null, null, null, null);
 		when(atmMachineService.checkBalance(anyLong(), anyInt())).thenThrow(new InvalidUserAccountException("Invalid User"));
 		account =  atmMachineController.checkBalance((long)123456789, 1234);
 		assertNotNull(account.getAccountNumber());
+	}
+	
+	@Test
+	public void TestDisperseAmount() throws InvalidUserAccountException, UnAuthorizedUserException, InsufficientBalanceException, InvalidAmountException, InsufficientNoteException{
+		List<Bank> banks = new ArrayList<Bank>();
+		banks.add(new Bank(50,10));
+		banks.add(new Bank(20,30));
+		banks.add(new Bank(10,30));
+		banks.add(new Bank(5,20));
+		ATMWithdrawalDisplay atmWithdrawalDisplay = new ATMWithdrawalDisplay((long) 123456789, 1234, 800, 200,banks, null);
+		when(atmMachineService.dispenseAmount(anyLong(), anyInt(),anyInt())).thenReturn(atmWithdrawalDisplay);
+		atmWithdrawalDisplay =  atmMachineController.dispenseAmount((long)123456789, 1234,400);
+		assertEquals(atmWithdrawalDisplay.getAccountNumber(), 123456789);
+		assertEquals(atmWithdrawalDisplay.getPin(), 1234);
+		assertEquals(atmWithdrawalDisplay.getOpeningBalance(), 400);
+		assertEquals(atmWithdrawalDisplay.getOverDraft(), 200);
+	}
+	@Test
+	public void TestDisperseAmountException() throws InvalidUserAccountException, UnAuthorizedUserException, InsufficientBalanceException, InvalidAmountException, InsufficientNoteException{
+		List<Bank> banks = new ArrayList<Bank>();
+		banks.add(new Bank(50,10));
+		banks.add(new Bank(20,30));
+		banks.add(new Bank(10,30));
+		banks.add(new Bank(5,20));
+		ATMWithdrawalDisplay atmWithdrawalDisplay = new ATMWithdrawalDisplay((long) 123456789, 1234, 800, 200,banks, null);
+		when(atmMachineService.dispenseAmount(anyLong(), anyInt(),anyInt())).thenThrow(new InvalidUserAccountException("Invalid User"));
+		atmWithdrawalDisplay =  atmMachineController.dispenseAmount((long)1234567890, 1234,100);
+		assertNotNull(atmWithdrawalDisplay.getAccountNumber());
 	}
 
 }

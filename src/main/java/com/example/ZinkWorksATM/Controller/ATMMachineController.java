@@ -47,7 +47,7 @@ public class ATMMachineController {
 			return new UserAccount(null, null, null, null, e.getClass()+ " : " + e.getMessage());
 		}
 	}
-	
+	 
 	@CrossOrigin(origins = "*")
 	@GetMapping("/dispenseAmount")
 	public ATMWithdrawalDisplay dispenseAmount(@RequestParam("accountNumber") Long accountNumber,@RequestParam("pin") int pin,@RequestParam("amount") int amount){

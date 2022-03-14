@@ -126,7 +126,75 @@ public class ATMMachineServiceImplTest {
 		accountEntity.setPin(1234);
 		accountEntity.setAccountNumber(accountNumber);
 		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
-		assertThrows(NullPointerException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,140),"User not found ::: Invalid UserAccount entered");
+		assertThrows(InvalidUserAccountException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,140),"User not found ::: Invalid UserAccount entered");
+	}
+	
+	@Test
+	public void testDispenseAmountInsufficientBalanceException() throws InvalidUserAccountException, UnAuthorizedUserException{
+		Long accountNumber = (long) 123456789;
+		UserAccountEntity accountEntity = Mockito.mock(UserAccountEntity.class);
+		accountEntity.setOpeningBalance(800);
+		accountEntity.setOverDraft(200);
+		accountEntity.setPin(1234);
+		accountEntity.setAccountNumber(accountNumber);
+		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
+		assertThrows(InsufficientBalanceException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,1400),"User not found ::: Invalid UserAccount entered");
+	}
+	
+	@Test
+	public void testDispenseInvalidAmount() throws InvalidUserAccountException, UnAuthorizedUserException{
+		Long accountNumber = (long) 123456789;
+		UserAccountEntity accountEntity = Mockito.mock(UserAccountEntity.class);
+		accountEntity.setOpeningBalance(800);
+		accountEntity.setOverDraft(200);
+		accountEntity.setPin(1234);
+		accountEntity.setAccountNumber(accountNumber);
+		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
+		assertThrows(InvalidAmountException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,141),"User not found ::: Invalid UserAccount entered");
+	}
+	
+	@Test
+	public void testDispenseInsufficientNoteException() throws InvalidUserAccountException, UnAuthorizedUserException{
+		Long accountNumber = (long) 123456789;
+		UserAccountEntity accountEntity = Mockito.mock(UserAccountEntity.class);
+		accountEntity.setOpeningBalance(800);
+		accountEntity.setOverDraft(200);
+		accountEntity.setPin(1234);
+		accountEntity.setAccountNumber(accountNumber);
+		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
+		assertThrows(InsufficientNoteException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,1800),"User not found ::: Invalid UserAccount entered");
+	}
+	
+	@Test
+	public void testDispenseUnAuthorizedUserException() throws InvalidUserAccountException, UnAuthorizedUserException{
+		Long accountNumber = (long) 123456789;
+		UserAccountEntity accountEntity = Mockito.mock(UserAccountEntity.class);
+		accountEntity.setOpeningBalance(800);
+		accountEntity.setOverDraft(200);
+		accountEntity.setPin(1234);
+		accountEntity.setAccountNumber(accountNumber);
+		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
+		assertThrows(UnAuthorizedUserException.class, () -> atmMachineServiceImpl.dispenseAmount(accountNumber, 123,141),"User not found ::: Invalid UserAccount entered");
+	}
+	
+	@Test
+	public void testDispenseAmountUsesOD() throws InvalidUserAccountException, UnAuthorizedUserException, InsufficientBalanceException, InvalidAmountException, InsufficientNoteException{
+		Long accountNumber = (long) 123456789;
+		ATMWithdrawalDisplay atmWithdrawalDisplay = new ATMWithdrawalDisplay();
+		UserAccountEntity accountEntity = Mockito.mock(UserAccountEntity.class);
+		accountEntity.setOpeningBalance(800);
+		accountEntity.setOverDraft(200);
+		accountEntity.setPin(1234);
+		accountEntity.setAccountNumber(accountNumber);
+		List<BankEntity> banks = new ArrayList<BankEntity>();
+		banks.add(new BankEntity(50,10));
+		banks.add(new BankEntity(20,30));
+		banks.add(new BankEntity(10,30));
+		banks.add(new BankEntity(5,20));
+		when(accountRepository.findByAccountNumber(any(Long.class))).thenReturn(accountEntity);
+		when(bankRepository.findAll()).thenReturn(banks);
+		atmWithdrawalDisplay = atmMachineServiceImpl.dispenseAmount(accountNumber, 1234,670);
+		assertEquals(atmWithdrawalDisplay.getOpeningBalance(), -10);
 	}
 	
 
