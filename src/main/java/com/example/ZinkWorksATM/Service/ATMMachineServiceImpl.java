@@ -67,7 +67,7 @@ public class ATMMachineServiceImpl implements ATMMachineService{
 	public ATMWithdrawalDisplay dispenseAmount(Long accountNumber, int pin, int amount) throws InsufficientBalanceException, InvalidAmountException, InsufficientNoteException, InvalidUserAccountException, UnAuthorizedUserException {
 		ATMWithdrawalDisplay atmWithdrawalDisplay;
 		UserAccountEntity accountEntity = accountRepository.findByAccountNumber(accountNumber);
-		if (accountEntity.getAccountNumber() > 0) {
+		if (null != accountEntity && accountEntity.getAccountNumber() > 0) {
 			if (pin == accountEntity.getPin()) {
 				List<BankEntity> bankEntities = bankRepository.findAll();
 				List<Bank> banks = new ArrayList<Bank>();
